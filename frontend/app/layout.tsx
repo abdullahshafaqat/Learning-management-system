@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "./context/auth-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,9 +13,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "LMS Platform - Learn & Grow",
-  description: "Modern Learning Management System for students and educators",
+  title: "LMS - Premium Learning",
+  description: "A premium learning management system",
 };
 
 export default function RootLayout({
@@ -26,10 +36,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} ${jakarta.variable} antialiased`}
       >
-        {children}
-        <Toaster />
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

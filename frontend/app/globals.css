@@ -9,6 +9,10 @@
   --brand-accent: #f472b6;
   --card: #ffffff;
   --border: #e4e4e7;
+  --font-geist-sans: "Segoe UI";
+  --font-geist-mono: "Consolas";
+  --font-outfit: "Trebuchet MS";
+  --font-jakarta: "Segoe UI";
 }
 
 @theme inline {

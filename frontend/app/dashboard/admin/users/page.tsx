@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { apiFetch } from "@/app/lib/api";
-import { UserCheck, UserMinus, ShieldAlert, ShieldCheck, Loader2 } from "lucide-react";
+import { UserCheck, UserMinus, ShieldAlert, ShieldCheck, Loader2, Search, Users } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
+import { cn } from "@/app/lib/utils";
 
 interface User {
   id: string;
@@ -13,15 +14,21 @@ interface User {
   isBlocked: boolean;
 }
 
+type SortKey = "username" | "email" | "role";
+type SortDir = "asc" | "desc";
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("username");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const fetchUsers = async () => {
     try {
-      const data = await apiFetch("/users");
+      const data = await apiFetch("/admin/users");
       if (data.success) {
         setUsers(data.users);
       } else {
@@ -38,10 +45,32 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, []);
 
+  const filteredAndSorted = useMemo(() => {
+    let list = users.filter(
+      (u) =>
+        !search.trim() ||
+        u.username.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase()) ||
+        u.role.toLowerCase().includes(search.toLowerCase())
+    );
+    list = [...list].sort((a, b) => {
+      const aVal = String(a[sortKey] ?? "");
+      const bVal = String(b[sortKey] ?? "");
+      const cmp = aVal.localeCompare(bVal, undefined, { sensitivity: "base" });
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return list;
+  }, [users, search, sortKey, sortDir]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else setSortKey(key);
+  };
+
   const handleToggleBlock = async (userId: string, currentStatus: boolean) => {
     setProcessingId(userId);
     try {
-      const data = await apiFetch(`/users/${userId}/block`, {
+      const data = await apiFetch(`/admin/users/${userId}/block`, {
         method: "PUT",
         body: JSON.stringify({ isBlocked: !currentStatus }),
       });
@@ -49,7 +78,6 @@ export default function AdminUsersPage() {
         setUsers(users.map(u => u.id === userId ? { ...u, isBlocked: !currentStatus } : u));
       }
     } catch (err) {
-      console.error("Failed to toggle block status", err);
     } finally {
       setProcessingId(null);
     }
@@ -59,7 +87,7 @@ export default function AdminUsersPage() {
     const newRole = currentRole === "student" ? "teacher" : "student";
     setProcessingId(userId);
     try {
-      const data = await apiFetch(`/users/${userId}/role`, {
+      const data = await apiFetch(`/admin/users/${userId}/role`, {
         method: "PUT",
         body: JSON.stringify({ role: newRole }),
       });
@@ -67,7 +95,6 @@ export default function AdminUsersPage() {
         setUsers(users.map(u => u.id === userId ? { ...u, role: newRole as any } : u));
       }
     } catch (err) {
-      console.error("Failed to change role", err);
     } finally {
       setProcessingId(null);
     }
@@ -93,26 +120,63 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">User Management</h1>
-        <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-          {users.length} Total Users
-        </span>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 pr-4 py-2 rounded-lg border border-zinc-200 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-brand/50 dark:border-zinc-700 dark:bg-zinc-800"
+            />
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-3 flex items-center gap-2">
+            <Users className="h-5 w-5 text-brand" />
+            <div>
+              <p className="text-[10px] font-black uppercase text-zinc-400">Total Users</p>
+              <p className="text-lg font-bold">{users.length}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <table className="w-full text-left text-sm">
           <thead className="bg-zinc-50 dark:bg-zinc-800/50">
             <tr>
-              <th className="px-6 py-4 font-bold text-zinc-900 dark:text-zinc-100">User</th>
-              <th className="px-6 py-4 font-bold text-zinc-900 dark:text-zinc-100">Email</th>
-              <th className="px-6 py-4 font-bold text-zinc-900 dark:text-zinc-100">Role</th>
+              <th
+                className="px-6 py-4 font-bold text-zinc-900 dark:text-zinc-100 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                onClick={() => toggleSort("username")}
+              >
+                User {sortKey === "username" && (sortDir === "asc" ? "↑" : "↓")}
+              </th>
+              <th
+                className="px-6 py-4 font-bold text-zinc-900 dark:text-zinc-100 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                onClick={() => toggleSort("email")}
+              >
+                Email {sortKey === "email" && (sortDir === "asc" ? "↑" : "↓")}
+              </th>
+              <th
+                className="px-6 py-4 font-bold text-zinc-900 dark:text-zinc-100 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                onClick={() => toggleSort("role")}
+              >
+                Role {sortKey === "role" && (sortDir === "asc" ? "↑" : "↓")}
+              </th>
               <th className="px-6 py-4 font-bold text-zinc-900 dark:text-zinc-100 text-center">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-            {users.map((user) => (
-              <tr key={user.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+            {filteredAndSorted.map((user) => (
+              <tr
+                key={user.id}
+                className={cn(
+                  "hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors",
+                  user.isBlocked && "bg-red-50/50 dark:bg-red-900/10"
+                )}
+              >
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-brand/10 text-brand flex items-center justify-center font-bold">
@@ -170,14 +234,17 @@ export default function AdminUsersPage() {
                 </td>
               </tr>
             ))}
+
+            {filteredAndSorted.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-6 py-16 text-center text-zinc-500 text-sm">
+                  {search.trim() ? "No users match your search." : "No users found yet."}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
     </div>
   );
-}
-
-// Minimal cn implementation since it wasn't exported in a way I could easily reference from this thought block
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ");
 }

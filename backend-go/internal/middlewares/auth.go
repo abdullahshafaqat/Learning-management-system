@@ -14,10 +14,8 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Try to get token from cookie
 		token, err := c.Cookie("token")
 		if err != nil {
-			// If not in cookie, check Authorization header
 			authHeader := c.GetHeader("Authorization")
 			if authHeader != "" {
 				token = strings.Replace(authHeader, "Bearer ", "", 1)
@@ -37,7 +35,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Check if user is blocked
 		userObjID, err := primitive.ObjectIDFromHex(claims.ID)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token."})
@@ -62,7 +59,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Set user info in context
 		c.Set("userId", claims.ID)
 		c.Set("userRole", claims.Role)
 		c.Next()

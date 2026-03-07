@@ -13,14 +13,16 @@ func GetQuiz(c *gin.Context) {
 	userRole := c.GetString("userRole")
 
 	quizService := services.NewQuizService()
-	quiz, err := quizService.GetQuiz(quizID, userID, userRole)
+	res, err := quizService.GetQuiz(quizID, userID, userRole)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"quiz":    quiz,
+		"success":     true,
+		"data":        res["quiz"],
+		"isSubmitted": res["isSubmitted"],
+		"score":       res["score"],
 	})
 }

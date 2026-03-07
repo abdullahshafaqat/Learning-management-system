@@ -15,7 +15,7 @@ export const TiltCard = ({ children, className }: { children: React.ReactNode, c
     const y = e.clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const multi = 15; // Intensity of rotation
+    const multi = 15;
 
     setRotateX(((y - centerY) / centerY) * -multi);
     setRotateY(((x - centerX) / centerX) * multi);

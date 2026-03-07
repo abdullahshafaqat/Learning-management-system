@@ -9,11 +9,13 @@ import (
 
 func GetQuizResults(c *gin.Context) {
 	quizID := c.Param("quizId")
+	userID := c.GetString("userId")
+	userRole := c.GetString("userRole")
 
 	quizService := services.NewQuizService()
-	results, err := quizService.GetResults(quizID)
+	results, err := quizService.GetResults(quizID, userID, userRole)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
+		c.JSON(http.StatusForbidden, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 

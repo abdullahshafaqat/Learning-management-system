@@ -9,7 +9,7 @@ import (
 type Question struct {
 	Question string   `json:"question" bson:"question"`
 	Options  []string `json:"options" bson:"options"`
-	Correct  int      `json:"correct" bson:"correct"` // index
+	Correct  int      `json:"correct" bson:"correct"`
 }
 
 type Quiz struct {

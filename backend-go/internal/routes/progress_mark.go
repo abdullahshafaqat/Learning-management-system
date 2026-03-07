@@ -2,7 +2,6 @@ package routes
 
 import (
 	"net/http"
-
 	"github.com/abdullahshafaqat/Learning-management-system.git/internal/services"
 	"github.com/gin-gonic/gin"
 )

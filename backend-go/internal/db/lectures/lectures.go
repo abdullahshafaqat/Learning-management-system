@@ -41,13 +41,11 @@ func (r *LectureRepository) FindByCourseID(ctx context.Context, courseID primiti
 	}
 	filter["courseId"] = courseID
 
-	// 1. Count Total
 	total, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// 2. Find with Skip/Limit
 	skip := (page - 1) * limit
 	opts := options.Find().
 		SetSort(bson.D{{Key: "order", Value: 1}}).

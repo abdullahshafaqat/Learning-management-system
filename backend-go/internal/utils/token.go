@@ -68,8 +68,8 @@ func VerifyToken(tokenString string) (*Claims, error) {
 
 func SetTokenCookie(c *gin.Context, accessToken, refreshToken string) {
 
-	c.SetCookie("token", accessToken, 900, "/", "", false, true)              // Access token (15 min)
-	c.SetCookie("refreshToken", refreshToken, 3600*24*7, "/", "", false, true) // Refresh token (7 days)
+	c.SetCookie("token", accessToken, 900, "/", "", false, true)
+	c.SetCookie("refreshToken", refreshToken, 3600*24*7, "/", "", false, true)
 }
 
 func ClearTokenCookie(c *gin.Context) {
@@ -78,5 +78,5 @@ func ClearTokenCookie(c *gin.Context) {
 }
 
 func ValidateRefreshToken(tokenString string) (*Claims, error) {
-	return VerifyToken(tokenString) // Re-use verify logic as the signing key is the same
+	return VerifyToken(tokenString)
 }

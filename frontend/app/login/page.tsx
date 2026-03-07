@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/app/context/auth-context";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/app/components/ui/card";
@@ -16,7 +17,6 @@ export default function LoginPage() {
     email: "",
     password: "",
   });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,22 +26,20 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
     try {
       await login(formData);
-    } catch (err: any) {
-      setError(err.message || "Login failed");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-background relative overflow-hidden">
+    <div className="relative flex min-h-screen bg-background overflow-hidden">
       <BackgroundBlobs />
       
-      {/* Right Column: Visual Panel (Flipped for Login for variety) */}
-      <div className="hidden lg:flex w-1/2 relative flex-col items-center justify-center p-12 overflow-hidden bg-brand">
+      <div className="relative hidden w-1/2 flex-col items-center justify-center overflow-hidden bg-brand p-12 lg:flex">
         <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.3),transparent_50%)]" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10" />
         
@@ -74,8 +72,7 @@ export default function LoginPage() {
         </motion.div>
       </div>
 
-      {/* Left Column: Form Panel */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative z-10">
+      <div className="relative z-10 flex w-full items-center justify-center p-4 sm:p-8 lg:w-1/2">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -88,27 +85,18 @@ export default function LoginPage() {
                 <LogIn className="h-6 w-6" />
               </div>
             </div>
-            <h1 className="text-3xl font-black">Welcome Back</h1>
+            <h1 className="text-2xl font-black sm:text-3xl">Welcome Back</h1>
           </div>
 
           <Card className="border-none shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] bg-white/70 backdrop-blur-2xl dark:bg-zinc-900/70">
             <CardHeader className="space-y-1 pb-8 hidden lg:block">
-              <CardTitle className="text-4xl font-extrabold tracking-tight">Sign In</CardTitle>
+              <CardTitle className="text-3xl font-extrabold tracking-tight xl:text-4xl">Sign In</CardTitle>
               <CardDescription className="text-lg font-medium">
                 Enter your credentials to continue.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="rounded-xl bg-red-50 p-4 text-sm font-bold text-red-500 dark:bg-red-950/20"
-                  >
-                    {error}
-                  </motion.div>
-                )}
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-sm font-bold ml-1">Email Address</label>
@@ -120,7 +108,7 @@ export default function LoginPage() {
                         name="email"
                         type="email"
                         placeholder="master@example.com"
-                        className="pl-11 bg-zinc-50/50 dark:bg-zinc-800/50 h-12"
+                        className="h-11 bg-zinc-50/50 pl-11 dark:bg-zinc-800/50 sm:h-12"
                         required
                         value={formData.email}
                         onChange={handleChange}
@@ -131,7 +119,7 @@ export default function LoginPage() {
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between px-1">
                       <label className="text-sm font-bold">Password</label>
-                      <Link href="#" className="text-xs font-bold text-brand hover:underline">Forgot password?</Link>
+                      <Link href="/forgot-password" className="text-xs font-bold text-brand hover:underline">Forgot password?</Link>
                     </div>
                     <div className="relative">
                       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
@@ -140,8 +128,9 @@ export default function LoginPage() {
                       <Input
                         name="password"
                         type="password"
+                        showPasswordToggle
                         placeholder="••••••••"
-                        className="pl-11 bg-zinc-50/50 dark:bg-zinc-800/50 h-12"
+                        className="h-11 bg-zinc-50/50 pl-11 dark:bg-zinc-800/50 sm:h-12"
                         required
                         value={formData.password}
                         onChange={handleChange}
@@ -152,7 +141,7 @@ export default function LoginPage() {
 
                 <Button
                   type="submit"
-                  className="w-full h-14 text-lg font-black"
+                  className="h-12 w-full text-base font-black sm:h-14 sm:text-lg"
                   disabled={loading}
                 >
                   {loading ? "Authenticating..." : "Sign In"}

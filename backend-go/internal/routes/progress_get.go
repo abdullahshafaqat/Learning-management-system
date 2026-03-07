@@ -26,9 +26,11 @@ func GetStudentProgress(c *gin.Context) {
 
 func GetAdminCourseProgress(c *gin.Context) {
 	courseID := c.Param("courseId")
+	userID := c.GetString("userId")
+	userRole := c.GetString("userRole")
 
 	progressService := services.NewProgressService()
-	results, err := progressService.GetAdminCourseProgress(courseID)
+	results, err := progressService.GetAdminCourseProgress(courseID, userID, userRole)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return

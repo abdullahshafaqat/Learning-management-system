@@ -1,7 +1,6 @@
 package config
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -18,11 +17,7 @@ type Config struct {
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
-		// Try loading from parent directory (common when running from cmd/)
-		err = godotenv.Load("../.env")
-		if err != nil {
-			log.Printf("Warning: Error loading .env file: %v", err)
-		}
+		_ = godotenv.Load("../.env")
 	}
 
 	mongoURI := getEnv("MONGO_URI", "")
@@ -41,9 +36,6 @@ func LoadConfig() *Config {
 	}
 
 	jwtSecret := getEnv("JWT_SECRET", "default_secret")
-	if jwtSecret == "default_secret" {
-		log.Println("WARNING: Using default JWT secret. Set JWT_SECRET environment variable for production!")
-	}
 
 	return &Config{
 		Port:          getEnv("PORT", "5000"),

@@ -8,85 +8,75 @@ import (
 func RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api")
 
-	// Auth
 	auth := api.Group("/auth")
 	auth.POST("/Signup", Signup)
 	auth.POST("/Login", Login)
 	auth.POST("/Logout", middlewares.AuthMiddleware(), Logout)
 	auth.POST("/Refresh", RefreshToken)
 	auth.GET("/me", middlewares.AuthMiddleware(), GetMe)
+	auth.POST("/forgot-password", ForgotPassword)
+	auth.POST("/reset-password", ResetPassword)
 
-	// Protected Routes
 	protected := api.Group("/")
 	protected.Use(middlewares.AuthMiddleware())
 
-	// Courses
 	courses := protected.Group("/courses")
-	// Teacher create course
 	courses.POST("", middlewares.RoleMiddleware("teacher", "admin"), CreateCourse)
-	// Teacher get own courses
 	courses.GET("/teacher", middlewares.RoleMiddleware("teacher", "admin"), GetTeacherCourses)
-	// Admin or Students: get all courses (Course Catalog)
 	courses.GET("", middlewares.RoleMiddleware("student", "teacher", "admin"), GetAllCourses)
-	// Update course
 	courses.PUT("/:id", middlewares.RoleMiddleware("teacher", "admin"), UpdateCourse)
-	// Delete course
 	courses.DELETE("/:id", middlewares.RoleMiddleware("teacher", "admin"), DeleteCourse)
 
-	// Lectures
 	lectures := protected.Group("/lectures")
-	// Add lecture
 	lectures.POST("/courses/:courseId", middlewares.RoleMiddleware("teacher", "admin"), AddLecture)
-	// Get lectures
 	lectures.GET("/courses/:courseId", middlewares.RoleMiddleware("student", "teacher", "admin"), GetLectures)
-	// Update lecture
+	lectures.GET("/:id/file", middlewares.RoleMiddleware("student", "teacher", "admin"), GetLectureFileURL)
 	lectures.PUT("/:id", middlewares.RoleMiddleware("teacher", "admin"), UpdateLecture)
-	// Reorder
 	lectures.PUT("/reorder/:courseId", middlewares.RoleMiddleware("teacher", "admin"), ReorderLectures)
-	// Delete
 	lectures.DELETE("/:id", middlewares.RoleMiddleware("teacher", "admin"), DeleteLecture)
 
-	// Enrollments
 	enrollments := protected.Group("/enrollments")
-	// Enroll in course (Student)
 	enrollments.POST("/courses/:courseId/enroll", middlewares.RoleMiddleware("student"), EnrollStudent)
-	// Get my enrollments (Student)
 	enrollments.GET("/student/enrollments", middlewares.RoleMiddleware("student"), GetStudentEnrollments)
-	// Admin: Get all
 	enrollments.GET("", middlewares.RoleMiddleware("admin"), GetAllEnrollments)
-	// Admin: Enroll manually
 	enrollments.POST("/admin/enroll", middlewares.RoleMiddleware("admin"), AdminEnrollStudent)
-	// Admin: Remove
 	enrollments.POST("/admin/remove", middlewares.RoleMiddleware("admin"), RemoveEnrollment)
 
-	// Admin Users
-	users := protected.Group("/users")
-	users.Use(middlewares.RoleMiddleware("admin"))
-	users.GET("", GetAllUsers)
-	users.PUT("/:id/role", UpdateUserRole)
-	users.PUT("/:id/block", ToggleUserBlock)
+	admin := protected.Group("/admin")
+	admin.Use(middlewares.RoleMiddleware("admin"))
+	{
+		admin.GET("/users", GetAllUsers)
+		admin.PUT("/users/:id/role", UpdateUserRole)
+		admin.PUT("/users/:id/block", ToggleUserBlock)
+		admin.GET("/courses", GetAllCourses)
+	}
 
-	// Quizzes
 	quizzes := protected.Group("/quizzes")
-	// Get Quiz (Student, Teacher, Admin)
 	quizzes.GET("/:quizId", middlewares.RoleMiddleware("student", "teacher", "admin"), GetQuiz)
-	// Submit Quiz (Student)
+	quizzes.GET("/courses/:courseId", middlewares.RoleMiddleware("student", "teacher", "admin"), GetCourseQuizzes)
 	quizzes.POST("/:quizId/submit", middlewares.RoleMiddleware("student"), SubmitQuiz)
-	// Get Results (Teacher, Admin)
 	quizzes.GET("/:quizId/results", middlewares.RoleMiddleware("teacher", "admin"), GetQuizResults)
 
-	// Create Quiz (Teacher, Admin) - under lectures or independent if using lectureId param?
-	// Plan said POST /lectures/:lectureId/quizzes
-	// So let's add it there or just use the lectures group?
-	// Existing lectures group is `protected.Group("/lectures")`
-	// New endpoint: POST /lectures/:lectureId/quizzes
+	assignments := protected.Group("/assignments")
+	assignments.POST("/lectures/:lectureId", middlewares.RoleMiddleware("teacher", "admin"), CreateAssignment)
+	assignments.GET("/lectures/:lectureId", middlewares.RoleMiddleware("student", "teacher", "admin"), GetLectureAssignments)
+	assignments.GET("/courses/:courseId", middlewares.RoleMiddleware("student", "teacher", "admin"), GetCourseAssignments)
+	assignments.GET("/student", middlewares.RoleMiddleware("student"), GetStudentAssignments)
+	assignments.GET("/:id", middlewares.RoleMiddleware("student", "teacher", "admin"), GetAssignment)
+	assignments.POST("/:id/submit", middlewares.RoleMiddleware("student"), SubmitAssignment)
+	assignments.GET("/:id/submissions", middlewares.RoleMiddleware("teacher", "admin"), GetAssignmentSubmissions)
+	assignments.PUT("/submissions/:submissionId/grade", middlewares.RoleMiddleware("teacher", "admin"), GradeAssignmentSubmission)
+
 	lectures.POST("/:lectureId/quizzes", middlewares.RoleMiddleware("teacher", "admin"), CreateQuiz)
-	// Progress Routes
+
 	progress := r.Group("/api/progress")
 	progress.Use(middlewares.AuthMiddleware())
 	{
 		progress.POST("/courses/:courseId/lectures/:lectureId", middlewares.RoleMiddleware("student"), MarkLectureCompleted)
 		progress.GET("/courses/:courseId", middlewares.RoleMiddleware("student", "teacher", "admin"), GetStudentProgress)
 		progress.GET("/courses/:courseId/admin", middlewares.RoleMiddleware("teacher", "admin"), GetAdminCourseProgress)
+		progress.GET("/admin/analytics", middlewares.RoleMiddleware("admin"), GetGlobalAnalytics)
+		progress.GET("/admin/courses", middlewares.RoleMiddleware("admin"), GetGlobalAnalytics)
+		progress.GET("/teacher/analytics", middlewares.RoleMiddleware("teacher"), GetTeacherAnalytics)
 	}
 }

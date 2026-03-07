@@ -30,9 +30,8 @@ export default function Home() {
       <BackgroundBlobs />
       <MouseAura />
       
-      {/* Navigation */}
-      <header className="fixed top-0 z-50 w-full px-6 py-6 md:px-12">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between rounded-2xl border border-white/20 bg-white/10 px-6 py-3 backdrop-blur-xl dark:bg-black/10 shadow-2xl shadow-black/5">
+      <header className="fixed top-0 z-50 w-full px-4 py-4 sm:px-6 md:px-10">
+        <nav className="mx-auto flex max-w-7xl items-center justify-between rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 shadow-2xl shadow-black/5 backdrop-blur-xl sm:px-6 sm:py-3 dark:bg-black/10">
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white shadow-lg shadow-brand/20">
               <span className="text-xl font-black italic">A</span>
@@ -56,7 +55,7 @@ export default function Home() {
         </nav>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-7xl px-6 pt-32 pb-24 md:px-12 md:pt-48">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 pb-20 pt-28 sm:px-6 md:px-10 md:pt-40">
         <motion.div 
           variants={container}
           initial="hidden"
@@ -72,31 +71,31 @@ export default function Home() {
               <span>Version 1.0 is Live</span>
             </motion.div>
             
-            <motion.h1 
+            <motion.h1
               variants={item}
-              className="text-6xl font-black leading-[1.05] tracking-tight sm:text-7xl lg:text-8xl font-heading"
+              className="font-heading text-4xl font-black leading-[1.05] tracking-tight sm:text-6xl lg:text-8xl"
             >
               Master Any Skill with <span className="text-gradient bg-linear-to-r from-brand via-brand-vibrant to-brand-accent bg-clip-text text-transparent pb-2">Elegance</span>
             </motion.h1>
 
-            <motion.p 
+            <motion.p
               variants={item}
-              className="max-w-xl text-xl font-medium text-zinc-500 md:text-2xl dark:text-zinc-400 leading-relaxed"
+              className="max-w-xl text-base font-medium leading-relaxed text-zinc-500 sm:text-xl md:text-2xl dark:text-zinc-400"
             >
               The most sophisticated learning platform ever built. Experience education as a premium digital journey.
             </motion.p>
 
-            <motion.div 
+            <motion.div
               variants={item}
-              className="flex flex-col gap-8 sm:flex-row items-center"
+              className="flex flex-col items-stretch gap-5 sm:flex-row sm:items-center sm:gap-8"
             >
               <Link href="/signup">
-                <Button size="lg" className="h-16 w-full px-10 text-lg font-black shadow-2xl shadow-brand/40 sm:w-auto shrink-0 hover:bg-brand/90 transition-all whitespace-nowrap">
+                <Button size="lg" className="h-14 w-full px-8 text-base font-black shadow-2xl shadow-brand/40 transition-all hover:bg-brand/90 sm:h-16 sm:w-auto sm:px-10 sm:text-lg">
                   Get Started Free
                   <ArrowRight className="ml-2 h-6 w-6" />
                 </Button>
               </Link>
-              <div className="flex items-center gap-6 px-2 min-w-max">
+              <div className="flex w-full items-center justify-start gap-4 sm:w-auto sm:gap-6 sm:px-2">
                 <div className="flex -space-x-4 shrink-0">
                   {[
                     "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
@@ -106,15 +105,15 @@ export default function Home() {
                     <motion.div 
                       key={i}
                       whileHover={{ scale: 1.1, zIndex: 10 }}
-                      className="h-14 w-14 rounded-full border-4 border-white bg-zinc-200 dark:border-zinc-900 shadow-xl overflow-hidden"
+                      className="h-12 w-12 overflow-hidden rounded-full border-4 border-white bg-zinc-200 shadow-xl sm:h-14 sm:w-14 dark:border-zinc-900"
                     >
                       <img src={url} alt={`Student ${i + 1}`} className="h-full w-full object-cover" />
                     </motion.div>
                   ))}
                 </div>
                 <div className="shrink-0">
-                  <div className="text-base font-black whitespace-nowrap text-foreground">1k+ Students</div>
-                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider whitespace-nowrap">Joined this week</div>
+                  <div className="text-base font-black text-foreground">1k+ Students</div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">Joined this week</div>
                 </div>
               </div>
             </motion.div>
@@ -145,7 +144,6 @@ export default function Home() {
                   </TiltCard>
                 </div>
                 
-                {/* Floating element */}
                 <motion.div 
                   animate={{ y: [0, -20, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -166,13 +164,12 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Features Preview */}
         <motion.div 
           variants={container}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="mt-40 grid grid-cols-1 md:grid-cols-3 gap-8"
+          className="mt-24 grid grid-cols-1 gap-6 sm:mt-32 md:grid-cols-3 md:gap-8"
         >
           {[
             { title: "Smart Learning", desc: "Adaptive curriculum that grows with you.", icon: Sparkles, color: "text-brand" },
@@ -182,13 +179,13 @@ export default function Home() {
             <TiltCard key={i}>
               <motion.div 
                 variants={item}
-                className="group relative h-full overflow-hidden rounded-[2.5rem] border border-border bg-white/50 p-10 backdrop-blur-sm transition-all hover:bg-white dark:bg-zinc-900/50 dark:hover:bg-zinc-900 shadow-xl shadow-black/5"
+                className="group relative h-full overflow-hidden rounded-[2.5rem] border border-border bg-white/50 p-6 shadow-xl shadow-black/5 backdrop-blur-sm transition-all hover:bg-white sm:p-10 dark:bg-zinc-900/50 dark:hover:bg-zinc-900"
               >
                 <div className={cn("mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-50 font-bold ring-1 ring-zinc-100 group-hover:bg-brand group-hover:text-white transition-all dark:bg-zinc-800 dark:ring-zinc-700", feature.color)}>
                   <feature.icon className="h-8 w-8" />
                 </div>
-                <h3 className="mb-4 text-3xl font-black font-heading">{feature.title}</h3>
-                <p className="text-lg font-medium text-zinc-500 dark:text-zinc-400 transition-colors">{feature.desc}</p>
+                <h3 className="font-heading mb-4 text-2xl font-black sm:text-3xl">{feature.title}</h3>
+                <p className="text-base font-medium text-zinc-500 transition-colors sm:text-lg dark:text-zinc-400">{feature.desc}</p>
               </motion.div>
             </TiltCard>
           ))}

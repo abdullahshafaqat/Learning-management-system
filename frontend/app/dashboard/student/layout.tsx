@@ -17,13 +17,11 @@ export default function StudentLayout({
       if (!user) {
         router.push("/login");
       } else if (user.role !== "student") {
-        // Strict Security Rule: Wrong role = forced logout + redirect to /login
         logout();
       }
     }
   }, [user, loading, logout, router]);
 
-  // Prevent flash of unauthorized content
   if (loading || !user || user.role !== "student") {
     return null;
   }

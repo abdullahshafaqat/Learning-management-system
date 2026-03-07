@@ -99,6 +99,8 @@ func (r *EnrollmentRepository) FindAll(ctx context.Context) ([]bson.M, error) {
 		{{Key: "$project", Value: bson.M{
 			"status":     1,
 			"enrolledAt": 1,
+			"studentId":  1,
+			"courseId":   1,
 			"student": bson.M{
 				"username": "$student.username",
 				"email":    "$student.email",

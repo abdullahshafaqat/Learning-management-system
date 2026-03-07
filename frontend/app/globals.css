@@ -49,6 +49,14 @@
   100% { background-position: 200% 0; }
 }
 
+.dark :root {
+  --background: #020617;
+  --foreground: #f8fafc;
+  --card: #0f172a;
+  --border: #1e293b;
+  --brand: #6366f1;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #020617;
@@ -64,6 +72,28 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
 }
 
 .mesh-bg {

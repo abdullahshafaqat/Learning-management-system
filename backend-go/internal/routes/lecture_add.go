@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/abdullahshafaqat/Learning-management-system.git/internal/services"
+	"github.com/abdullahshafaqat/Learning-management-system.git/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,7 +23,6 @@ func AddLecture(c *gin.Context) {
 
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		// Try "File" (capitalized) as per user's Postman
 		file, header, err = c.Request.FormFile("File")
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "File is required (key: 'file' or 'File')"})
@@ -31,7 +31,8 @@ func AddLecture(c *gin.Context) {
 	}
 	defer file.Close()
 
-	mimeType := header.Header.Get("Content-Type")
+	rawMime := header.Header.Get("Content-Type")
+	mimeType := utils.DetectMimeType(file, rawMime)
 
 	lecture, err := lectureService.AddLecture(courseID, userID, userRole, title, isPublished, isPreview, file, header.Filename, mimeType)
 	if err != nil {

@@ -20,6 +20,10 @@ func NewCourseRepository() *CourseRepository {
 	}
 }
 
+func (r *CourseRepository) GetCollection() *mongo.Collection {
+	return r.collection
+}
+
 func (r *CourseRepository) CountByCode(ctx context.Context, code string) (int64, error) {
 	return r.collection.CountDocuments(ctx, bson.M{"code": code})
 }
@@ -45,13 +49,11 @@ func (r *CourseRepository) FindByTeacherID(ctx context.Context, teacherID primit
 func (r *CourseRepository) FindAll(ctx context.Context, filter bson.M, page, limit int) ([]bson.M, int64, error) {
 	skip := (page - 1) * limit
 
-	// 1. Get Total Count
 	total, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// 2. Aggregate with Filter, Lookup, Skip, Limit
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: filter}},
 		{{Key: "$lookup", Value: bson.M{
@@ -60,13 +62,18 @@ func (r *CourseRepository) FindAll(ctx context.Context, filter bson.M, page, lim
 			"foreignField": "_id",
 			"as":           "teacher",
 		}}},
-		{{Key: "$unwind", Value: "$teacher"}},
+		{{Key: "$unwind", Value: bson.M{
+			"path":                       "$teacher",
+			"preserveNullAndEmptyArrays": true,
+		}}},
 		{{Key: "$project", Value: bson.M{
-			"title":       1,
-			"code":        1,
-			"description": 1,
-			"status":      1,
-			"createdAt":   1,
+			"id":             "$_id",
+			"title":          1,
+			"code":           1,
+			"description":    1,
+			"status":         1,
+			"createdAt":      1,
+			"instructorName": "$teacher.username",
 			"teacher": bson.M{
 				"_id":   "$teacher._id",
 				"email": "$teacher.email",
@@ -79,14 +86,19 @@ func (r *CourseRepository) FindAll(ctx context.Context, filter bson.M, page, lim
 
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		return nil, 0, err
+		return []bson.M{}, 0, err
 	}
 	defer cursor.Close(ctx)
 
-	var courses []bson.M
+	courses := make([]bson.M, 0)
 	if err = cursor.All(ctx, &courses); err != nil {
-		return nil, 0, err
+		return []bson.M{}, 0, err
 	}
+
+	if courses == nil {
+		courses = []bson.M{}
+	}
+
 	return courses, total, nil
 }
 

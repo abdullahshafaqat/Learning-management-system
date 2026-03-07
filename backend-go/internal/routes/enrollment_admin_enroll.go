@@ -3,6 +3,7 @@ package routes
 import (
 	"net/http"
 
+	"github.com/abdullahshafaqat/Learning-management-system.git/internal/models"
 	"github.com/abdullahshafaqat/Learning-management-system.git/internal/services"
 	"github.com/gin-gonic/gin"
 )
@@ -10,10 +11,7 @@ import (
 func AdminEnrollStudent(c *gin.Context) {
 	enrollmentService := services.NewEnrollmentService()
 
-	var body struct {
-		StudentID string `json:"studentId" binding:"required"`
-		CourseID  string `json:"courseId" binding:"required"`
-	}
+	var body models.AdminEnrollmentRequest
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})

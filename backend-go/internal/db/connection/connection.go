@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,20 +18,15 @@ func ConnectDB(uri string) {
 	clientOptions := options.Client().ApplyURI(uri)
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		log.Fatal("Error connecting to MongoDB:", err)
+		panic(err)
 	}
-
-	// Ping the database
-	log.Println("Pinging MongoDB...")
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Printf("Error pinging MongoDB: %v", err)
-		log.Fatal("Could not connect to MongoDB. Check your internet connection and ensure your IP is whitelisted in MongoDB Atlas.")
+		panic(err)
 	}
 
 	Client = client
-	DB = client.Database("lms") // Default database name, can be extracted if needed
-	log.Println("Connected to MongoDB successfully")
+	DB = client.Database("lms")
 }
 
 func GetCollection(collectionName string) *mongo.Collection {

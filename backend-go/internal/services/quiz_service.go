@@ -45,13 +45,11 @@ func (s *QuizService) CreateQuiz(lectureIDHex, title, userIDHex, userRole string
 		return nil, errors.New("invalid user ID format")
 	}
 
-	// Verify lecture exists
 	lecture, err := s.lectureRepo.FindOne(ctx, lectureID)
 	if err != nil {
 		return nil, errors.New("lecture not found")
 	}
 
-	// Verify ownership: admin bypasses, teacher must own the course
 	if userRole != "admin" {
 		course, err := s.courseRepo.FindOne(ctx, lecture.CourseID)
 		if err != nil {
@@ -78,7 +76,7 @@ func (s *QuizService) CreateQuiz(lectureIDHex, title, userIDHex, userRole string
 	return &quiz, nil
 }
 
-func (s *QuizService) GetQuiz(quizIDHex, userIDHex, userRole string) (*models.Quiz, error) {
+func (s *QuizService) GetQuiz(quizIDHex, userIDHex, userRole string) (map[string]interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -92,21 +90,34 @@ func (s *QuizService) GetQuiz(quizIDHex, userIDHex, userRole string) (*models.Qu
 		return nil, err
 	}
 
-	// If student, HIDE correct answers for security
 	if userRole == "student" {
 		for i := range quiz.Questions {
 			quiz.Questions[i].Correct = -1
 		}
 	}
 
-	return quiz, nil
+	response := map[string]interface{}{
+		"quiz": quiz,
+	}
+
+	if userRole == "student" {
+		userID, _ := primitive.ObjectIDFromHex(userIDHex)
+		submission, err := s.repo.GetSubmission(ctx, quizID, userID)
+		if err == nil && submission != nil {
+			response["isSubmitted"] = true
+			response["score"] = submission.Score
+		} else {
+			response["isSubmitted"] = false
+		}
+	}
+
+	return response, nil
 }
 
 func (s *QuizService) SubmitQuiz(quizIDHex, userIDHex, userRole string, answers []int) (*models.Submission, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// 0. Role Guard (Only students can submit)
 	if userRole != "student" {
 		return nil, errors.New("only students can submit quizzes")
 	}
@@ -121,7 +132,6 @@ func (s *QuizService) SubmitQuiz(quizIDHex, userIDHex, userRole string, answers 
 		return nil, errors.New("invalid user ID format")
 	}
 
-	// 1. Check if already submitted
 	existing, err := s.repo.GetSubmission(ctx, quizID, studentID)
 	if err == nil && existing != nil {
 		return nil, errors.New("already submitted")
@@ -129,18 +139,15 @@ func (s *QuizService) SubmitQuiz(quizIDHex, userIDHex, userRole string, answers 
 		return nil, err
 	}
 
-	// 2. Fetch Quiz for grading
 	quiz, err := s.repo.GetQuiz(ctx, quizID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 2.1 Validate Answer Length
 	if len(answers) != len(quiz.Questions) {
 		return nil, fmt.Errorf("answers count mismatch: expected %d but got %d", len(quiz.Questions), len(answers))
 	}
 
-	// 3. Auto-Grade
 	score := 0
 	for i, q := range quiz.Questions {
 		if answers[i] == q.Correct {
@@ -162,14 +169,11 @@ func (s *QuizService) SubmitQuiz(quizIDHex, userIDHex, userRole string, answers 
 		return nil, err
 	}
 
-	// 4. Update Progress
 	lecture, err := s.lectureRepo.FindOne(ctx, quiz.LectureID)
 	if err == nil && lecture != nil {
 		progressService := NewProgressService()
 		err = progressService.MarkQuizCompleted(userIDHex, lecture.CourseID.Hex(), quizIDHex)
 		if err != nil {
-			// Log error but don't fail submission?
-			// Or return error? Usually better to return error if progress tracking fails.
 			return nil, fmt.Errorf("quiz submitted but progress update failed: %v", err)
 		}
 	}
@@ -177,7 +181,7 @@ func (s *QuizService) SubmitQuiz(quizIDHex, userIDHex, userRole string, answers 
 	return &submission, nil
 }
 
-func (s *QuizService) GetResults(quizIDHex string) ([]models.Submission, error) {
+func (s *QuizService) GetResults(quizIDHex, userIDHex, userRole string) (any, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -186,5 +190,62 @@ func (s *QuizService) GetResults(quizIDHex string) ([]models.Submission, error) 
 		return nil, errors.New("invalid quiz ID format")
 	}
 
+	if userRole != "admin" {
+		quiz, err := s.repo.GetQuiz(ctx, quizID)
+		if err != nil {
+			return nil, errors.New("quiz not found")
+		}
+		lecture, err := s.lectureRepo.FindOne(ctx, quiz.LectureID)
+		if err != nil {
+			return nil, errors.New("lecture not found")
+		}
+		course, err := s.courseRepo.FindOne(ctx, lecture.CourseID)
+		if err != nil {
+			return nil, errors.New("course not found")
+		}
+		if course.TeacherID.Hex() != userIDHex {
+			return nil, errors.New("access denied: you do not own this course")
+		}
+	}
+
 	return s.repo.GetResults(ctx, quizID)
+}
+
+func (s *QuizService) GetQuizzesByCourse(courseIDHex, userIDHex, userRole string) ([]models.Quiz, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	courseID, err := primitive.ObjectIDFromHex(courseIDHex)
+	if err != nil {
+		return nil, errors.New("invalid course ID format")
+	}
+
+	lectures, err := s.lectureRepo.FindAllByCourseID(ctx, courseID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(lectures) == 0 {
+		return []models.Quiz{}, nil
+	}
+
+	lectureIDs := make([]primitive.ObjectID, len(lectures))
+	for i, l := range lectures {
+		lectureIDs[i] = l.ID
+	}
+
+	quizzes, err := s.repo.FindAllByLectureIDs(ctx, lectureIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	if userRole == "student" {
+		for i := range quizzes {
+			for j := range quizzes[i].Questions {
+				quizzes[i].Questions[j].Correct = -1
+			}
+		}
+	}
+
+	return quizzes, nil
 }

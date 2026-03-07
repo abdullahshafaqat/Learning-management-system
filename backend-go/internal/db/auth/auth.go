@@ -84,3 +84,45 @@ func (r *AuthRepository) ClearRefreshToken(ctx context.Context, userID primitive
 	})
 	return err
 }
+
+func (r *AuthRepository) SetResetToken(ctx context.Context, userID primitive.ObjectID, tokenHash string, expiry time.Time) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": userID}, bson.M{
+		"$set": bson.M{
+			"resetToken":       tokenHash,
+			"resetTokenExpiry": expiry,
+		},
+	})
+	return err
+}
+
+func (r *AuthRepository) FindUserByResetToken(ctx context.Context, tokenHash string) (*models.User, error) {
+	var user models.User
+	err := r.collection.FindOne(ctx, bson.M{"resetToken": tokenHash}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *AuthRepository) ClearResetToken(ctx context.Context, userID primitive.ObjectID) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": userID}, bson.M{
+		"$unset": bson.M{
+			"resetToken":       "",
+			"resetTokenExpiry": "",
+		},
+	})
+	return err
+}
+
+func (r *AuthRepository) UpdatePasswordAndClearReset(ctx context.Context, userID primitive.ObjectID, hashedPassword string) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": userID}, bson.M{
+		"$set": bson.M{
+			"password": hashedPassword,
+		},
+		"$unset": bson.M{
+			"resetToken":       "",
+			"resetTokenExpiry": "",
+		},
+	})
+	return err
+}

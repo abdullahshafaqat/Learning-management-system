@@ -16,7 +16,6 @@ func GetLectures(c *gin.Context) {
 	userID := c.GetString("userId")
 	userRole := c.GetString("userRole")
 
-	// Pagination
 	page, limit := utils.CalculatePagination(c)
 
 	lectures, total, err := lectureService.GetLectures(courseID, userID, userRole, page, limit)

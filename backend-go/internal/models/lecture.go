@@ -13,7 +13,7 @@ type Lecture struct {
 	MediaType   string             `bson:"mediaType" json:"mediaType" binding:"required,oneof=video audio document image"`
 	FileURL     string             `bson:"fileUrl" json:"fileUrl"`
 	PublicID    string             `bson:"publicId" json:"publicId" binding:"required"`
-	FileName    string             `bson:"fileName" json:"fileName"` // Store original filename
+	FileName    string             `bson:"fileName" json:"fileName"`
 	Order       int                `bson:"order" json:"order"`
 	IsPublished bool               `bson:"isPublished" json:"isPublished"`
 	IsPreview   bool               `bson:"isPreview" json:"isPreview"`

@@ -3,6 +3,7 @@ package routes
 import (
 	"net/http"
 
+	"github.com/abdullahshafaqat/Learning-management-system.git/internal/models"
 	"github.com/abdullahshafaqat/Learning-management-system.git/internal/services"
 	"github.com/gin-gonic/gin"
 )
@@ -14,9 +15,7 @@ func ReorderLectures(c *gin.Context) {
 	userID := c.GetString("userId")
 	userRole := c.GetString("userRole")
 
-	var body struct {
-		ReorderList []map[string]interface{} `json:"reorderList" binding:"required"`
-	}
+	var body models.ReorderLecturesRequest
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})

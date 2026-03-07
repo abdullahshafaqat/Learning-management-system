@@ -23,8 +23,6 @@ func NewQuizRepository() *QuizRepository {
 	}
 }
 
-// --- Quiz Operations ---
-
 func (r *QuizRepository) CreateQuiz(ctx context.Context, quiz models.Quiz) (*mongo.InsertOneResult, error) {
 	return r.quizCollection.InsertOne(ctx, quiz)
 }
@@ -39,7 +37,6 @@ func (r *QuizRepository) GetQuiz(ctx context.Context, quizID primitive.ObjectID)
 }
 
 func (r *QuizRepository) GetQuizByLectureID(ctx context.Context, lectureID primitive.ObjectID) (*models.Quiz, error) {
-	// Assuming one quiz per lecture for now, or returns the first one
 	var quiz models.Quiz
 	err := r.quizCollection.FindOne(ctx, bson.M{"lectureId": lectureID}).Decode(&quiz)
 	if err != nil {
@@ -48,7 +45,19 @@ func (r *QuizRepository) GetQuizByLectureID(ctx context.Context, lectureID primi
 	return &quiz, nil
 }
 
-// --- Submission Operations ---
+func (r *QuizRepository) FindAllByLectureIDs(ctx context.Context, lectureIDs []primitive.ObjectID) ([]models.Quiz, error) {
+	cursor, err := r.quizCollection.Find(ctx, bson.M{"lectureId": bson.M{"$in": lectureIDs}})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var quizzes []models.Quiz
+	if err = cursor.All(ctx, &quizzes); err != nil {
+		return nil, err
+	}
+	return quizzes, nil
+}
 
 func (r *QuizRepository) CreateSubmission(ctx context.Context, submission models.Submission) (*mongo.InsertOneResult, error) {
 	return r.submissionCollection.InsertOne(ctx, submission)
@@ -63,22 +72,39 @@ func (r *QuizRepository) GetSubmission(ctx context.Context, quizID, studentID pr
 	return &submission, nil
 }
 
-func (r *QuizRepository) GetResults(ctx context.Context, quizID primitive.ObjectID) ([]models.Submission, error) {
-	cursor, err := r.submissionCollection.Find(ctx, bson.M{"quizId": quizID})
+func (r *QuizRepository) GetResults(ctx context.Context, quizID primitive.ObjectID) ([]bson.M, error) {
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{"quizId": quizID}}},
+		{{Key: "$lookup", Value: bson.M{
+			"from":         "users",
+			"localField":   "studentId",
+			"foreignField": "_id",
+			"as":           "student",
+		}}},
+		{{Key: "$unwind", Value: "$student"}},
+		{{Key: "$project", Value: bson.M{
+			"_id":         1,
+			"studentId":   1,
+			"studentName": "$student.username",
+			"score":       1,
+			"submittedAt": 1,
+		}}},
+	}
+
+	cursor, err := r.submissionCollection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var submissions []models.Submission
-	if err = cursor.All(ctx, &submissions); err != nil {
+	var results []bson.M
+	if err = cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
-	return submissions, nil
+	return results, nil
 }
 
 func (r *QuizRepository) InitIndexes(ctx context.Context) error {
-	// Quizzes Index: lectureId
 	_, err := r.quizCollection.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.M{"lectureId": 1},
 	})
@@ -86,8 +112,6 @@ func (r *QuizRepository) InitIndexes(ctx context.Context) error {
 		return err
 	}
 
-	// Submissions Index: quizId + studentId (Partial compound index for uniqueness check if not unique)
-	// Actually, a simple quizId index is good for GetResults, and studentId for user history.
 	_, err = r.submissionCollection.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{Keys: bson.M{"quizId": 1}},
 		{Keys: bson.M{"studentId": 1}},

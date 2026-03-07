@@ -9,10 +9,7 @@ import (
 )
 
 func CreateQuiz(c *gin.Context) {
-	var body struct {
-		Title     string            `json:"title" binding:"required"`
-		Questions []models.Question `json:"questions" binding:"required"`
-	}
+	var body models.CreateQuizRequest
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})

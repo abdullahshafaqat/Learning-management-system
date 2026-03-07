@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/app/context/auth-context";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Select } from "@/app/components/ui/select";
@@ -19,7 +20,6 @@ export default function SignupPage() {
     password: "",
     role: "student",
   });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -29,22 +29,20 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
     try {
       await signup(formData);
-    } catch (err: any) {
-      setError(err.message || "Signup failed");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Signup failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-background relative overflow-hidden">
+    <div className="relative flex min-h-screen bg-background overflow-hidden">
       <BackgroundBlobs />
       
-      {/* Left Column: Visual Panel */}
-      <div className="hidden lg:flex w-1/2 relative flex-col items-center justify-center p-12 overflow-hidden bg-zinc-900">
+      <div className="relative hidden w-1/2 flex-col items-center justify-center overflow-hidden bg-zinc-900 p-12 lg:flex">
         <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_50%_50%,rgba(79,70,229,0.4),transparent_50%)]" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
         
@@ -82,8 +80,7 @@ export default function SignupPage() {
         </motion.div>
       </div>
 
-      {/* Right Column: Form Panel */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative z-10">
+      <div className="relative z-10 flex w-full items-center justify-center p-4 sm:p-8 lg:w-1/2">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -96,27 +93,18 @@ export default function SignupPage() {
                 <Sparkles className="h-6 w-6" />
               </div>
             </div>
-            <h1 className="text-3xl font-black">Create Account</h1>
+            <h1 className="text-2xl font-black sm:text-3xl">Create Account</h1>
           </div>
 
           <Card className="border-none shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] bg-white/70 backdrop-blur-2xl dark:bg-zinc-900/70">
             <CardHeader className="space-y-1 pb-8 hidden lg:block">
-              <CardTitle className="text-4xl font-extrabold tracking-tight">Sign Up</CardTitle>
+              <CardTitle className="text-3xl font-extrabold tracking-tight xl:text-4xl">Sign Up</CardTitle>
               <CardDescription className="text-lg font-medium">
                 Enter your details to create your premium account.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-5">
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="rounded-xl bg-red-50 p-4 text-sm font-bold text-red-500 dark:bg-red-950/20"
-                  >
-                    {error}
-                  </motion.div>
-                )}
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
@@ -151,8 +139,9 @@ export default function SignupPage() {
                     <Input
                       name="password"
                       type="password"
+                      showPasswordToggle
                       placeholder="••••••••"
-                      className="bg-zinc-50/50 dark:bg-zinc-800/50 h-12"
+                      className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 sm:h-12"
                       required
                       value={formData.password}
                       onChange={handleChange}
@@ -164,7 +153,7 @@ export default function SignupPage() {
                     name="role"
                     value={formData.role}
                     onChange={handleChange}
-                    className="h-12 bg-zinc-50/50 dark:bg-zinc-800/50"
+                    className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 sm:h-12"
                   >
                     <option value="student">Student — I want to learn</option>
                     <option value="teacher">Teacher — I want to instruct</option>
@@ -174,7 +163,7 @@ export default function SignupPage() {
 
                 <Button
                   type="submit"
-                  className="w-full h-14 text-lg font-black"
+                  className="h-12 w-full text-base font-black sm:h-14 sm:text-lg"
                   disabled={loading}
                 >
                   {loading ? "Creating Account..." : "Create Account"}

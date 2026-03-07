@@ -38,7 +38,6 @@ func (s *EnrollmentService) EnrollStudent(courseIDHex string, studentIDHex strin
 		return nil, errors.New("invalid student ID format")
 	}
 
-	// Check if course exists
 	_, err = s.courseRepo.FindOne(ctx, courseID)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -47,7 +46,6 @@ func (s *EnrollmentService) EnrollStudent(courseIDHex string, studentIDHex strin
 		return nil, err
 	}
 
-	// Check if already enrolled
 	count, err := s.repo.CountByStudentAndCourse(ctx, studentID, courseID)
 	if err != nil {
 		return nil, err

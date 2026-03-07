@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { apiFetch } from "@/app/lib/api";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface User {
   id: string;
@@ -22,10 +22,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/forgot-password", "/reset-password"];
+
+function isPublicPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleRedirect = (role: string) => {
     switch (role) {
@@ -59,8 +67,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (isPublicPath(pathname)) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
     checkUser();
-  }, [checkUser]);
+  }, [pathname, checkUser]);
 
   const login = async (credentials: any) => {
     setLoading(true);
@@ -74,7 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         handleRedirect(data.user.role);
       }
     } catch (error) {
-      console.error("Login failed:", error);
       throw error;
     } finally {
       setLoading(false);
@@ -93,7 +105,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         handleRedirect(data.user.role);
       }
     } catch (error) {
-      console.error("Signup failed:", error);
       throw error;
     } finally {
       setLoading(false);
@@ -104,7 +115,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await apiFetch("/auth/Logout", { method: "POST" });
     } catch (error) {
-      console.error("Logout failed:", error);
     } finally {
       setUser(null);
       router.push("/login");

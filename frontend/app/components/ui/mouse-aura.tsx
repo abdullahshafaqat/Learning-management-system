@@ -27,7 +27,7 @@ export const MouseAura = () => {
         left: springX,
         top: springY,
       }}
-      className="fixed pointer-events-none z-0 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/5 blur-[120px] dark:bg-brand/10"
+      className="pointer-events-none fixed z-0 hidden h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/5 blur-[100px] dark:bg-brand/10 md:block lg:h-[600px] lg:w-[600px] lg:blur-[120px]"
     />
   );
 };

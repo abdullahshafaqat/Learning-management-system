@@ -17,13 +17,11 @@ export default function TeacherLayout({
       if (!user) {
         router.push("/login");
       } else if (user.role !== "teacher") {
-        // Strict Security Rule: Wrong role = forced logout + redirect to /login
         logout();
       }
     }
   }, [user, loading, logout, router]);
 
-  // Prevent flash of unauthorized content
   if (loading || !user || user.role !== "teacher") {
     return null;
   }

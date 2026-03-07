@@ -3,6 +3,7 @@ package routes
 import (
 	"net/http"
 
+	"github.com/abdullahshafaqat/Learning-management-system.git/internal/models"
 	"github.com/abdullahshafaqat/Learning-management-system.git/internal/services"
 	"github.com/gin-gonic/gin"
 )
@@ -11,9 +12,7 @@ func UpdateUserRole(c *gin.Context) {
 	adminService := services.NewAdminService()
 
 	userID := c.Param("id")
-	var body struct {
-		Role string `json:"role" binding:"required"`
-	}
+	var body models.UpdateUserRoleRequest
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})

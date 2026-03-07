@@ -31,7 +31,7 @@ func NewLectureService() *LectureService {
 }
 
 func (s *LectureService) AddLecture(courseIDHex string, userIDHex string, userRole string, title string, isPublished bool, isPreview bool, file multipart.File, filename string, mimeType string) (*models.Lecture, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	courseID, err := primitive.ObjectIDFromHex(courseIDHex)
@@ -50,20 +50,20 @@ func (s *LectureService) AddLecture(courseIDHex string, userIDHex string, userRo
 		return nil, errors.New("access denied. You do not own this course")
 	}
 
-	// Auto-assign order
+	
 	lastLecture, err := s.repo.FindLastLecture(ctx, courseID)
 	nextOrder := 1
 	if err == nil {
 		nextOrder = lastLecture.Order + 1
 	}
 
-	// Upload to Cloudinary
-	uploadRes, err := utils.UploadToCloudinary(file, filename, mimeType)
+	
+	uploadRes, err := utils.UploadToCloudinary(ctx, file, filename, mimeType)
 	if err != nil {
 		return nil, err
 	}
 
-	// Media Type Detection
+	
 	mediaType, _ := utils.GetMediaTypeAndResourceType(filename, mimeType)
 
 	newLecture := models.Lecture{
@@ -106,7 +106,7 @@ func (s *LectureService) GetLectures(courseIDHex string, userIDHex string, userR
 	filter := bson.M{}
 
 	if userRole == "admin" || (userRole == "teacher" && course.TeacherID.Hex() == userIDHex) {
-		// Return all
+		
 	} else if userRole == "student" {
 		studID, err := primitive.ObjectIDFromHex(userIDHex)
 		if err != nil {
@@ -151,7 +151,7 @@ func (s *LectureService) DeleteLecture(lectureIDHex string, userIDHex string, us
 		return errors.New("access denied")
 	}
 
-	// Delete from Cloudinary
+	
 	_, resourceType := utils.GetMediaTypeAndResourceType(lecture.FileName, "")
 	utils.DeleteFromCloudinary(lecture.PublicID, resourceType)
 
@@ -197,7 +197,7 @@ func (s *LectureService) UpdateLecture(lectureIDHex string, updates map[string]i
 		return nil, err
 	}
 
-	// Return updated lecture
+	
 	return s.repo.FindOne(ctx, lectureID)
 }
 

@@ -112,7 +112,7 @@ export default function SignupPage() {
                       <div className="relative">
                         <Input
                           name="username"
-                          placeholder="John Doe"
+                          placeholder="Name"
                           className="bg-zinc-50/50 dark:bg-zinc-800/50"
                           required
                           value={formData.username}
@@ -125,7 +125,7 @@ export default function SignupPage() {
                       <Input
                         name="email"
                         type="email"
-                        placeholder="john@example.com"
+                        placeholder="Email"
                         className="bg-zinc-50/50 dark:bg-zinc-800/50"
                         required
                         value={formData.email}

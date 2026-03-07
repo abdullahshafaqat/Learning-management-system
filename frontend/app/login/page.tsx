@@ -107,7 +107,7 @@ export default function LoginPage() {
                       <Input
                         name="email"
                         type="email"
-                        placeholder="Type you email"
+                        placeholder="Type your email"
                         className="h-11 bg-zinc-50/50 pl-11 dark:bg-zinc-800/50 sm:h-12"
                         required
                         value={formData.email}
